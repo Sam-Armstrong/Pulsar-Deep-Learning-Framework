@@ -6,4 +6,7 @@ Description: Class for creating and interacting with dense (fully connected) net
 """
 
 class Dense:
-    pass
+    
+    def __init__(self, Nin, Nout, initialization = 'He', activation = 'relu') -> None:
+        self.Nin = Nin
+        self.Nout = Nout
