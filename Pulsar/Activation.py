@@ -8,8 +8,15 @@ Description: Class for applying different activation functions to given data.
 import numpy as np
 
 class Activation:
+    
     def __init__(self) -> None:
         pass
+
+    # Softmax activation function (takes a vector rather than a matrix - only applied on the final layer of a network)
+    def softmax(self, x):
+        ex = np.exp(x)
+        y = ex / np.sum(ex)
+        return y
 
     # Applies the ReLU function to a given matrix
     def ReLU(self, h):
