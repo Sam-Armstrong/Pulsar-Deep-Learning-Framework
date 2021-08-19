@@ -40,7 +40,6 @@ class Dense:
     def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
         a = Activation()
 
-
         # Calculates the layer output prior to applying the activation function
         h = np.transpose(np.matmul(self.weights, np.transpose(batch)))
         h = np.add(h, self.biases[np.newaxis,:]) # Adds the biases
@@ -50,19 +49,17 @@ class Dense:
 
         derivation_matrix = a.derivationReLU(h)
 
-        if next_layer_weights == None and next_layer_grad == None:
+        try:
+            delta = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivation_matrix)
+        except:
             # Calculates the error signal
             e_n = np.subtract(batch_labels, y)
             # Calculates the local gradient of each neuron
             delta = np.multiply(e_n, derivation_matrix)
 
-        else:
-            delta = np.multiply(np.matmul(next_layer_weights.T, next_layer_grad.T).T, derivation_matrix)
-
         self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch)
         self.biases += (sum(delta) * self.lr) / len(batch)
-        print(len(batch))
-
+        
         return y, delta, self.weights
 
 #print(Dense(3,3).forwardPass(np.array([[-1, 2, 3], [4, -5, 6]], np.int32)))
