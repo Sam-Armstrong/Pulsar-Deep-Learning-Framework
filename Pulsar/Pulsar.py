@@ -25,8 +25,8 @@ class Pulsar:
         self.initialization = initialization
         self.layers = list()
 
-    def dense(self, Nin, Nout):
-        self.layers.append(Dense(Nin, Nout, learning_rate = self.lr, initialization = self.initialization))
+    def dense(self, Nin, Nout, activation = 'relu'):
+        self.layers.append(Dense(Nin, Nout, learning_rate = self.lr, initialization = self.initialization, activation = activation))
 
     def train(self, training_data, training_labels):
         training_data = NormalizeInput(training_data) # Normalizes the input training data
