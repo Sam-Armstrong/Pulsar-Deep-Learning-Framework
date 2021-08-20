@@ -15,17 +15,18 @@ def NormalizeInput(x):
 class Pulsar:
     
     def __init__(self, optimizer = 'sgd', learning_rate = 0.01, batch_size = 200, epochs = 5, 
-                 regularization = 'l1', loss = 'mean-squared') -> None:
+                 regularization = 'l1', loss = 'mean-squared', initialization = 'He') -> None:
         self.optimizer = optimizer
         self.lr = learning_rate
         self.batch_size = batch_size
         self.epochs = epochs
         self.regularization = regularization
         self.loss_function = loss
+        self.initialization = initialization
         self.layers = list()
 
     def dense(self, Nin, Nout):
-        self.layers.append(Dense(Nin, Nout, learning_rate = self.lr))
+        self.layers.append(Dense(Nin, Nout, learning_rate = self.lr, initialization = self.initialization))
 
     def train(self, training_data, training_labels):
         training_data = NormalizeInput(training_data) # Normalizes the input training data
@@ -67,8 +68,16 @@ class Pulsar:
                     
                 batch_number += 1
 
+    # Finds the output of a batch after a certain number of layers
     def getLayersOutput(self, batch, layers):
         x = batch
         for l in layers:
+            x = l.forwardPass(x)
+        return x
+
+    # Allows predictions to be made on a whole batch at a time, speeding up processing
+    def batchPredict(self, batch):
+        x = batch
+        for l in self.layers:
             x = l.forwardPass(x)
         return x
