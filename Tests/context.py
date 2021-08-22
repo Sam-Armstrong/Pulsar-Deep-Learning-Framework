@@ -4,4 +4,6 @@ import sys
 sys.path.insert(1, 'Pulsar')
 
 from Activation import Activation
+from Dense import Dense
+from Initialization import Initialization
 from Pulsar import Pulsar

@@ -14,7 +14,7 @@ class Initialization:
 
     # Defines a random weight initialization
     def Random_init(self, Nin, Nout):
-        W = np.random.uniform(0,1,(Nout, Nin))
+        W = np.random.uniform(0, 1, (Nout, Nin))
         return W / np.sum(W) # Normalizes the weights so they sum to 1
 
     # Defines a Xavier weight initialization
