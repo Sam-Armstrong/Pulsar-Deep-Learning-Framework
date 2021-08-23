@@ -9,6 +9,12 @@ from Initialization import Initialization
 from Activation import Activation
 import numpy as np
 
+# Returns a matrix of positive and negative penalty values corresponding to whether each weight is positive or negative
+def L1_penalty_matrix(W, penalty):
+    W = np.where(W < 0, -1 * penalty, W)
+    W = np.where(W > 0, penalty, W)
+    return W
+
 class Dense:
     
     def __init__(self, Nin, Nout, initialization = 'He', activation = 'relu', learning_rate = 0.01) -> None:
@@ -51,7 +57,7 @@ class Dense:
             delta = np.multiply(e_n, derivative_matrix)
 
         # Updates the weights and biases
-        self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch)
+        self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch) + (-1 * self.lr * L1_penalty_matrix(self.weights, 0.00003))
         self.biases += (sum(delta) * self.lr) / len(batch)
         
         return y, delta, self.weights
