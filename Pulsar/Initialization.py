@@ -20,7 +20,7 @@ class Initialization:
     # Defines a Xavier weight initialization
     def Xavier_init(self, Nin, Nout):
         W = np.random.randn(Nout, Nin) * np.sqrt(1 / (Nin + Nout))
-        return W
+        return W / np.sum(W)
 
     # Defines a He initialization
     def He_init(self, Nin, Nout):

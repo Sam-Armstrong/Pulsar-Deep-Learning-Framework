@@ -15,7 +15,7 @@ def NormalizeInput(x):
 class Pulsar:
     
     def __init__(self, optimizer = 'sgd', learning_rate = 0.01, batch_size = 200, epochs = 5, 
-                 regularization = 'l2', loss = 'mean-squared', initialization = 'He', penalty = 0) -> None:
+                 regularization = 'L2', loss = 'cross-entropy', initialization = 'He', penalty = 0) -> None:
         self.optimizer = optimizer
         self.lr = learning_rate
         self.batch_size = batch_size
@@ -27,7 +27,9 @@ class Pulsar:
         self.layers = list()
 
     def dense(self, Nin, Nout, activation = 'relu'):
-        self.layers.append(Dense(Nin, Nout, learning_rate = self.lr, initialization = self.initialization, activation = activation, penalty = self.penalty, regularization = self.regularization))
+        self.layers.append(Dense(Nin, Nout, learning_rate = self.lr, initialization = self.initialization, 
+                                 activation = activation, penalty = self.penalty, regularization = self.regularization,
+                                 loss = self.loss_function))
 
     def train(self, training_data, training_labels):
         training_data = NormalizeInput(training_data) # Normalizes the input training data

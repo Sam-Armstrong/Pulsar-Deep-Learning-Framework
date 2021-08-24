@@ -7,6 +7,7 @@ Description: Class for creating and interacting with dense (fully connected) net
 
 from Initialization import Initialization
 from Activation import Activation
+from Loss import Loss
 import numpy as np
 
 # Returns a matrix of positive and negative penalty values corresponding to whether each weight is positive or negative
@@ -16,14 +17,12 @@ def L1_penalty_matrix(W, penalty):
     return W
 
 def L2_penalty_matrix(W, penalty):
-    #W = np.where(W < 0, -1 * penalty * W, W)
-    #W = np.where(W > 0, penalty * W, W)
     W = np.where(W != 0, penalty * W, W)
     return W
 
 class Dense:
     
-    def __init__(self, Nin, Nout, initialization = 'He', activation = 'relu', learning_rate = 0.01, regularization = 'l2', penalty = 0) -> None:
+    def __init__(self, Nin, Nout, initialization = 'He', activation = 'relu', learning_rate = 0.01, regularization = 'L2', penalty = 0, loss = 'cross-entropy') -> None:
         self.Nin = Nin
         self.Nout = Nout
         self.biases = np.zeros((Nout))
@@ -31,6 +30,7 @@ class Dense:
         self.activation = activation
         self.reg = regularization
         self.penalty = penalty
+        self.loss = loss
 
         if initialization == 'He':
             self.weights = Initialization().He_init(Nin, Nout)
@@ -59,17 +59,16 @@ class Dense:
         try:
             delta = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
         except:
-            # Calculates the error signal
-            e_n = np.subtract(batch_labels, y)
-            # Calculates the local gradient of each neuron
-            delta = np.multiply(e_n, derivative_matrix)
+            # Finds the gradient of the selected loss function
+            l = Loss(self.loss)
+            delta = l.derivativeLoss(batch_labels, y, derivative_matrix)
 
         # Updates the weights and biases
-        self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch) #+ (-1 * self.lr * L2_penalty_matrix(self.weights, 0.001))
+        self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch)
         self.biases += (sum(delta) * self.lr) / len(batch)
 
         if self.penalty != 0:
-            if self.reg == 'l2':
+            if self.reg == 'L2':
                 self.weights += -1 * L2_penalty_matrix(self.weights, self.penalty)
             else:
                 self.weights += -1 * L1_penalty_matrix(self.weights, self.penalty)
