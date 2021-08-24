@@ -18,7 +18,6 @@ class Loss:
             delta = self.derivativeCrossEntropy(batch_labels, y)
         else:
             delta = self.derivativeMeanSquare(batch_labels, y, derivative_matrix)
-
         return delta
     
     def derivativeMeanSquare(self, batch_labels, y, derivative_matrix):

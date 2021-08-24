@@ -15,7 +15,8 @@ def NormalizeInput(x):
 class Pulsar:
     
     def __init__(self, optimizer = 'sgd', learning_rate = 0.01, batch_size = 200, epochs = 5, 
-                 regularization = 'L2', loss = 'cross-entropy', initialization = 'He', penalty = 0) -> None:
+                 regularization = 'L2', loss = 'cross-entropy', initialization = 'He', penalty = 0, 
+                 adaptive_lr = True) -> None:
         self.optimizer = optimizer
         self.lr = learning_rate
         self.batch_size = batch_size
@@ -24,6 +25,7 @@ class Pulsar:
         self.loss_function = loss
         self.initialization = initialization
         self.penalty = penalty
+        self.adaptive_lr = adaptive_lr
         self.layers = list()
 
     def dense(self, Nin, Nout, activation = 'relu'):
@@ -40,6 +42,17 @@ class Pulsar:
             batch_number = 1
             dW = 0
             db = 0
+
+            if self.adaptive_lr == True:
+                #lr = self.lr / (1 + n) #(1 + (n * self.lr))
+                lr = self.lr * np.exp(-0.01 * n)
+            else:
+                lr = self.lr
+
+            for l in self.layers:
+                l.lr = lr
+
+            print(lr)
 
             shuffled_idxs = np.random.permutation(Ntrain)
 
