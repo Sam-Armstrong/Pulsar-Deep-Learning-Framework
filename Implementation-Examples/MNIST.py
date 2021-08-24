@@ -16,9 +16,8 @@ one_hot = np.zeros(shape)
 one_hot[rows, train_y] = 1
 train_y = one_hot
 
-p = Pulsar(epochs = 5, learning_rate = 0.001, initialization = 'Xavier')
-p.dense(784, 400, activation = 'relu')
-p.dense(400, 100, activation = 'relu')
+p = Pulsar(epochs = 50, learning_rate = 0.001, initialization = 'Xavier', penalty = 0.0001)
+p.dense(784, 100, activation = 'relu')
 p.dense(100, 10, activation = 'softmax')
 p.train(train_X, train_y)
 

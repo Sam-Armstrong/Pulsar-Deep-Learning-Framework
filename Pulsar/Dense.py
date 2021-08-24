@@ -15,14 +15,22 @@ def L1_penalty_matrix(W, penalty):
     W = np.where(W > 0, penalty, W)
     return W
 
+def L2_penalty_matrix(W, penalty):
+    #W = np.where(W < 0, -1 * penalty * W, W)
+    #W = np.where(W > 0, penalty * W, W)
+    W = np.where(W != 0, penalty * W, W)
+    return W
+
 class Dense:
     
-    def __init__(self, Nin, Nout, initialization = 'He', activation = 'relu', learning_rate = 0.01) -> None:
+    def __init__(self, Nin, Nout, initialization = 'He', activation = 'relu', learning_rate = 0.01, regularization = 'l2', penalty = 0) -> None:
         self.Nin = Nin
         self.Nout = Nout
         self.biases = np.zeros((Nout))
         self.lr = learning_rate
         self.activation = activation
+        self.reg = regularization
+        self.penalty = penalty
 
         if initialization == 'He':
             self.weights = Initialization().He_init(Nin, Nout)
@@ -57,7 +65,13 @@ class Dense:
             delta = np.multiply(e_n, derivative_matrix)
 
         # Updates the weights and biases
-        self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch) + (-1 * self.lr * L1_penalty_matrix(self.weights, 0.00003))
+        self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch) #+ (-1 * self.lr * L2_penalty_matrix(self.weights, 0.001))
         self.biases += (sum(delta) * self.lr) / len(batch)
+
+        if self.penalty != 0:
+            if self.reg == 'l2':
+                self.weights += -1 * L2_penalty_matrix(self.weights, self.penalty)
+            else:
+                self.weights += -1 * L1_penalty_matrix(self.weights, self.penalty)
         
         return y, delta, self.weights
