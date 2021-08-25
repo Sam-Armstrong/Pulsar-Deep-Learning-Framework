@@ -44,7 +44,6 @@ class Pulsar:
             db = 0
 
             if self.adaptive_lr == True:
-                #lr = self.lr / (1 + n) #(1 + (n * self.lr))
                 lr = self.lr * np.exp(-0.01 * n)
             else:
                 lr = self.lr
