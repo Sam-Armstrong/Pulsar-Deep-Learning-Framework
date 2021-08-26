@@ -13,6 +13,7 @@ import numpy as np
 from keras.datasets import mnist # Import the MNIST dataset
 import time
 
+# CURRENTLY does not work with depth values other than one (1) !
 class Convolution:
     
     def __init__(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1, batch_size = 200) -> None:
@@ -87,7 +88,7 @@ class Convolution:
         self.biases += (sum(delta) * self.lr) / len(batch)"""
 
 
-(train_X, train_y), (test_X, test_y) = mnist.load_data()
-c = Convolution(28, 28, batch_size = 200)
-y = c.forwardPass(train_X[0:200])
-print(np.shape(y))
+# (train_X, train_y), (test_X, test_y) = mnist.load_data()
+# c = Convolution(28, 28, batch_size = 200)
+# y = c.forwardPass(train_X[0:200])
+# print(np.shape(y))
