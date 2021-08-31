@@ -6,6 +6,7 @@ Description: The main class that is used for implementing neural networks.
 """
 
 from Dense import Dense
+from Convolution import Convolution
 import numpy as np
 
 # Normalizes a set of data
@@ -32,6 +33,10 @@ class Pulsar:
         self.layers.append(Dense(Nin, Nout, learning_rate = self.lr, initialization = self.initialization, 
                                  activation = activation, penalty = self.penalty, regularization = self.regularization,
                                  loss = self.loss_function))
+
+    def convolution(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1):
+        self.layers.append(Convolution(input_height, input_width, kernel_size = kernel_size, depth = depth, 
+                                       input_depth = input_depth, batch_size = self.batch_size))
 
     def train(self, training_data, training_labels):
         training_data = NormalizeInput(training_data) # Normalizes the input training data
