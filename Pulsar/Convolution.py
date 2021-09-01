@@ -9,17 +9,19 @@ from Initialization import Initialization
 from Activation import Activation
 from Loss import Loss
 import numpy as np
+import time
 
 from keras.datasets import mnist # Import the MNIST dataset
 
 class Convolution:
     
     def __init__(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1, batch_size = 200,
-                 stride = 1, padding = 0) -> None:
+                 stride = 1, padding = 0, activation = 'relu') -> None:
         
         self.kernel_size = kernel_size
         self.batch_size = batch_size
 
+        self.activation = activation
         self.stride = stride
         self.padding = padding
         # kernel_size: size of the matrix inside each kernel (filter size)
@@ -32,7 +34,7 @@ class Convolution:
         
         # Initialize the filters and biases
         self.kernels = np.random.randn(*self.kernels_shape) # * Collects argument(s) into a tuple
-        self.biases = np.random.randn(int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)) #(input_height - kernel_size + 1, input_width - kernel_size + 1) #(*self.output_shape)
+        self.biases = np.random.randn(depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)) #(input_height - kernel_size + 1, input_width - kernel_size + 1) #(*self.output_shape)
 
 
     def forwardPass(self, batch):
@@ -50,7 +52,7 @@ class Convolution:
                 data = np.delete(data, len(data) - 1, axis = 0)
 
             for i in range(self.depth):
-                output = np.copy(self.biases) # The ouput is the bias + the convolution output
+                output = np.copy(self.biases[i]) # The ouput is the bias + the convolution output
             
                 # Calculate the cross-correlation of the input and the filter
                 x_positions = int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)
@@ -69,8 +71,8 @@ class Convolution:
 
             output_batch[n] = current_output_batch
 
-            # Activate
-            output_batch = Activation().activate(output_batch)
+            # Applies the activation function
+            output_batch = Activation(activation = self.activation).activate(output_batch)
         
         return output_batch
 
@@ -97,6 +99,8 @@ class Convolution:
 
 (train_X, train_y), (test_X, test_y) = mnist.load_data()
 c = Convolution(28, 28, batch_size = 10, depth = 2, stride = 1, padding = 1)
+start_time = time.time()
 y = c.forwardPass(train_X[0:10])
 #print(y)
 print(np.shape(y))
+print("Finished in %s seconds" % round((time.time() - start_time), 1))
