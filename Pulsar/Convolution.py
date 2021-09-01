@@ -14,47 +14,56 @@ from keras.datasets import mnist # Import the MNIST dataset
 
 class Convolution:
     
-    def __init__(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1, batch_size = 200, stride = 1) -> None:
+    def __init__(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1, batch_size = 200,
+                 stride = 1, padding = 0) -> None:
+        
         self.kernel_size = kernel_size
         self.batch_size = batch_size
 
         self.stride = stride
+        self.padding = padding
         # kernel_size: size of the matrix inside each kernel (filter size)
         self.depth = depth # The number of kernels (depth of the output)
         self.input_depth = input_depth # The depth of the input (rbg? (3))
         self.input_height = input_height
         self.input_width = input_width
-        self.output_shape = (batch_size, depth, input_height - kernel_size + 1, input_width - kernel_size + 1) # The shape of the output from the layer
+        self.output_shape = (batch_size, depth, (input_height + (padding * 2)) - kernel_size + 1, (input_width + (padding * 2)) - kernel_size + 1) # The shape of the output from the layer
         self.kernels_shape = (depth, input_depth, kernel_size, kernel_size) # The shape of the kernels (filters)
         
         # Initialize the filters and biases
         self.kernels = np.random.randn(*self.kernels_shape) # * Collects argument(s) into a tuple
-        self.biases = np.random.randn(input_height - kernel_size + 1, input_width - kernel_size + 1) #(*self.output_shape)
+        self.biases = np.random.randn(int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)) #(input_height - kernel_size + 1, input_width - kernel_size + 1) #(*self.output_shape)
 
 
     def forwardPass(self, batch):
         batch = batch.reshape(self.batch_size, self.input_depth, self.input_height, self.input_width)
-        output_batch = np.empty((self.batch_size, self.depth, int((self.input_height - self.kernel_size + self.stride) / self.stride), int((self.input_width - self.kernel_size + self.stride) / self.stride)))
+        output_batch = np.empty((self.batch_size, self.depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)))
 
         # Loop through the number of output kernels
         for n in range(self.batch_size):
-            current_output_batch = np.empty((self.depth, int((self.input_height - self.kernel_size + self.stride) / self.stride), int((self.input_width - self.kernel_size + self.stride) / self.stride)))
+            current_output_batch = np.empty((self.depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)))
+            data = batch[n]
+
+            if self.padding != 0:
+                data = np.pad(data, self.padding)
+                data = np.delete(data, 0, axis = 0)
+                data = np.delete(data, len(data) - 1, axis = 0)
 
             for i in range(self.depth):
-                input = batch[n]
                 output = np.copy(self.biases) # The ouput is the bias + the convolution output
             
                 # Calculate the cross-correlation of the input and the filter
-                x_positions = (self.input_width - self.kernel_size + 1)
-                y_positions = (self.input_height - self.kernel_size + 1)
+                x_positions = int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)
+                y_positions = int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)
                 filter = self.kernels[i]
 
                 # Loop through all possible positions for the filter on the image
                 for y in range(y_positions):
                     for x in range(x_positions):
-                        current_data = input[:, y:y+self.kernel_size, x:x+self.kernel_size]
-                        current_output = np.sum(filter * current_data)
-                        output[x][y] += current_output
+                        if x % self.stride == 0 and y % self.stride == 0:
+                            current_data = data[:, y:y+self.kernel_size, x:x+self.kernel_size]
+                            current_output = np.sum(filter * current_data)
+                            output[x][y] += current_output
 
                 current_output_batch[i] = output
 
@@ -87,7 +96,7 @@ class Convolution:
 
 
 (train_X, train_y), (test_X, test_y) = mnist.load_data()
-c = Convolution(28, 28, batch_size = 200, depth = 2)
-y = c.forwardPass(train_X[0:200])
+c = Convolution(28, 28, batch_size = 10, depth = 2, stride = 1, padding = 1)
+y = c.forwardPass(train_X[0:10])
 #print(y)
 print(np.shape(y))
