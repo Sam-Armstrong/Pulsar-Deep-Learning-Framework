@@ -5,21 +5,24 @@ Date: 2021
 Description: Class for creating and interacting with dense (fully connected) network layers.
 """
 
+from numpy.lib.function_base import gradient
 from Initialization import Initialization
 from Activation import Activation
 from Loss import Loss
 import numpy as np
 import time
+import math
 
 from keras.datasets import mnist # Import the MNIST dataset
 
 class Convolution:
     
     def __init__(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1, batch_size = 200,
-                 stride = 1, padding = 0, activation = 'relu') -> None:
+                 stride = 1, padding = 0, activation = 'relu', learning_rate = 0.001) -> None:
         
         self.kernel_size = kernel_size
         self.batch_size = batch_size
+        self.learning_rate = learning_rate
 
         self.activation = activation
         self.stride = stride
@@ -38,11 +41,12 @@ class Convolution:
 
 
     def forwardPass(self, batch):
-        batch = batch.reshape(self.batch_size, self.input_depth, self.input_height, self.input_width)
-        output_batch = np.empty((self.batch_size, self.depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)))
+        current_batch_size = len(batch)
+        batch = batch.reshape(current_batch_size, self.input_depth, self.input_height, self.input_width)
+        output_batch = np.empty((current_batch_size, self.depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)))
 
         # Loop through the number of output kernels
-        for n in range(self.batch_size):
+        for n in range(current_batch_size):
             current_output_batch = np.empty((self.depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)))
             data = batch[n]
 
@@ -77,30 +81,88 @@ class Convolution:
         return output_batch
 
 
-    """def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
-        a = Activation(self.activation)
-        h = np.transpose(np.matmul(self.weights, np.transpose(batch)))
-        h = np.add(h, self.biases[np.newaxis,:]) # Adds the biases
-        y = a.activate(h) # Applies the activation function
-        derivative_matrix = a.activateDerivative(h) # Applies the derivative of the activation function
+    def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
 
-        # Calculates the local gradients for each of the neurons in the layer
+        # Finds the output gradient if the next layer is dense - as dense layers do not return their input gradient
         try:
-            delta = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
-        except:
-            # Finds the gradient of the selected loss function
-            l = Loss(self.loss)
-            delta = l.derivativeLoss(batch_labels, y, derivative_matrix)
+            fp = self.forwardPass(batch).reshape(200, 676)
+            derivative_matrix = Activation().derivativeReLU(fp)
+            next_layer_grad = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
+        except Exception as e:
+            print(e)
 
-        # Updates the weights and biases
-        self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch)
-        self.biases += (sum(delta) * self.lr) / len(batch)"""
+        # dL/dF = Convolution of the input and the loss gradient
+
+        next_layer_grad = np.sum(next_layer_grad, axis = 0)
+        next_layer_grad = next_layer_grad / self.batch_size
+
+        if len(next_layer_grad.shape) == 1:
+            output_gradient_size = int(math.sqrt(len(next_layer_grad)))
+            next_layer_grad = next_layer_grad.reshape(1, output_gradient_size, output_gradient_size)###
+        else:
+            output_gradient_size = next_layer_grad.shape[len(next_layer_grad - 1)]
+
+        batch = batch.reshape(self.batch_size, self.input_depth, self.input_height, self.input_width)
+        filter_gradient = np.empty((self.depth, self.kernel_size, self.kernel_size))
+        input_gradient = np.empty((self.batch_size, self.input_depth, self.input_height, self.input_width))
 
 
-(train_X, train_y), (test_X, test_y) = mnist.load_data()
-c = Convolution(28, 28, batch_size = 10, depth = 2, stride = 1, padding = 1)
-start_time = time.time()
-y = c.forwardPass(train_X[0:10])
-#print(y)
-print(np.shape(y))
-print("Finished in %s seconds" % round((time.time() - start_time), 1))
+        for n in range(self.batch_size):
+            current_output_batch = np.empty((self.depth, int((self.input_height - output_gradient_size + self.stride) / self.stride), int((self.input_width - output_gradient_size + self.stride) / self.stride)))
+            data = batch[n]
+
+            for i in range(self.depth):            
+                # Calculate the cross-correlation of the input and the filter
+                x_positions = int((self.input_width - output_gradient_size + self.stride) / self.stride)
+                y_positions = int((self.input_height - output_gradient_size + self.stride) / self.stride)
+                output = np.empty((y_positions, x_positions))
+
+                # Loop through all possible positions for the filter on the image
+                for y in range(y_positions):
+                    for x in range(x_positions):
+                        if x % self.stride == 0 and y % self.stride == 0:
+                            current_data = data[:, y:y+output_gradient_size, x:x+output_gradient_size]
+                            current_output = np.sum(next_layer_grad * current_data)
+                            output[x][y] += current_output
+
+                current_output_batch[i] = output
+
+            filter_gradient += current_output_batch
+
+
+        # dL/dX = Full Convolution of the 180 degree rotated filter and the loss gradient
+        
+        max_padding = output_gradient_size - 1 # The largest padding that can be applied
+
+        for n in range(self.batch_size):
+            current_output_batch = np.empty((self.depth, int(((self.kernel_size + (max_padding * 2)) - output_gradient_size + self.stride) / self.stride), int(((self.kernel_size + (max_padding * 2)) - output_gradient_size + self.stride) / self.stride)))
+
+            for i in range(self.depth):            
+                # Calculate the cross-correlation of the input and the filter
+                x_positions = int(((self.kernel_size + (max_padding * 2)) - output_gradient_size + self.stride) / self.stride)
+                y_positions = int(((self.kernel_size + (max_padding * 2)) - output_gradient_size + self.stride) / self.stride)
+                output = np.empty((y_positions, x_positions))
+
+                filter = self.kernels[i]
+                rotated_filter = np.flip(filter, axis = 0)
+                rotated_filter = np.pad(rotated_filter, max_padding)
+                while len(rotated_filter) > self.kernel_size:
+                    rotated_filter = np.delete(rotated_filter, 0, axis = 0)
+                    rotated_filter = np.delete(rotated_filter, len(rotated_filter) - 1, axis = 0)
+
+                # Loop through all possible positions for the filter on the image
+                for y in range(y_positions):
+                    for x in range(x_positions):
+                        if x % self.stride == 0 and y % self.stride == 0:
+                            current_data = rotated_filter[:, y:y+output_gradient_size, x:x+output_gradient_size]
+                            current_output = np.sum(next_layer_grad * current_data)
+                            output[x][y] += current_output
+
+                current_output_batch[i] = output
+
+            input_gradient[n] = current_output_batch
+
+        self.kernels -= self.learning_rate * filter_gradient
+        self.biases -= self.learning_rate * next_layer_grad
+        return input_gradient
+

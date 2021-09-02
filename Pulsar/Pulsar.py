@@ -36,9 +36,10 @@ class Pulsar:
 
     def convolution(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1):
         self.layers.append(Convolution(input_height, input_width, kernel_size = kernel_size, depth = depth, 
-                                       input_depth = input_depth, batch_size = self.batch_size))
+                                       input_depth = input_depth, batch_size = self.batch_size, learning_rate = self.lr))
 
     def train(self, training_data, training_labels):
+        print(self.layers)
         training_data = NormalizeInput(training_data) # Normalizes the input training data
         Ntrain = len(training_data)
         Nlayers = len(self.layers)
@@ -56,12 +57,11 @@ class Pulsar:
             for l in self.layers:
                 l.lr = lr
 
-            print(lr)
-
             shuffled_idxs = np.random.permutation(Ntrain)
 
             # Loops through all the batches in the training set
             while Ntrain - (batch_number * self.batch_size) >= self.batch_size:
+                print(batch_number)
                 start_index = batch_number * self.batch_size
                 batch = np.zeros((self.batch_size, 784))
                 batch_labels = np.zeros((self.batch_size, 10))
@@ -76,14 +76,18 @@ class Pulsar:
                 # Updates the final layer
                 layer = self.layers[Nlayers - 1]
                 x = self.getLayersOutput(batch, self.layers[0:Nlayers - 1])
-                current_batch, gradient, W = layer.backpropagate(x, batch_labels = batch_labels)
+                #if type(layer) == Dense:
+                gradient, W = layer.backpropagate(x, batch_labels = batch_labels)
                 
                 i = Nlayers - 2
                 # Updates the hidden layers
                 while i >= 0:
                     layer = self.layers[i]
                     x = self.getLayersOutput(batch, self.layers[0:i])
-                    current_batch, gradient, W = layer.backpropagate(x, next_layer_weights = W, next_layer_grad = gradient)
+                    if type(layer) == Dense:
+                        gradient, W = layer.backpropagate(x, next_layer_weights = W, next_layer_grad = gradient)
+                    elif type(layer) == Convolution:
+                        gradient = layer.backpropagate(x, next_layer_weights = W, next_layer_grad = gradient)
                     i -= 1
                     
                 batch_number += 1

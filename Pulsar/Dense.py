@@ -22,7 +22,8 @@ def L2_penalty_matrix(W, penalty):
 
 class Dense:
     
-    def __init__(self, Nin, Nout, initialization = 'He', activation = 'relu', learning_rate = 0.01, regularization = 'L2', penalty = 0, loss = 'cross-entropy') -> None:
+    def __init__(self, Nin, Nout, initialization = 'He', activation = 'relu', learning_rate = 0.01, 
+                 regularization = 'L2', penalty = 0, loss = 'cross-entropy', batch_size = 200) -> None:
         self.Nin = Nin
         self.Nout = Nout
         self.biases = np.zeros((Nout))
@@ -31,6 +32,7 @@ class Dense:
         self.reg = regularization
         self.penalty = penalty
         self.loss = loss
+        self.batch_size = batch_size
 
         if initialization == 'He':
             self.weights = Initialization().He_init(Nin, Nout)
@@ -42,6 +44,7 @@ class Dense:
     # Calculates the layer output for a given batch
     def forwardPass(self, batch):
         a = Activation(self.activation)
+        batch = batch.reshape(len(batch), self.Nin)
         h = np.transpose(np.matmul(self.weights, np.transpose(batch)))
         h = np.add(h, self.biases[np.newaxis,:]) # Adds the biases
         y = a.activate(h) # Applies the activation function
@@ -49,6 +52,7 @@ class Dense:
 
     # Trains the layer for a batch through backpropagation
     def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
+        batch = batch.reshape(self.batch_size, self.Nin)
         a = Activation(self.activation)
         h = np.transpose(np.matmul(self.weights, np.transpose(batch)))
         h = np.add(h, self.biases[np.newaxis,:]) # Adds the biases
@@ -73,4 +77,4 @@ class Dense:
             else:
                 self.weights += -1 * L1_penalty_matrix(self.weights, self.penalty)
         
-        return y, delta, self.weights
+        return delta, self.weights
