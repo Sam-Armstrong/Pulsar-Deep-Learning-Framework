@@ -16,9 +16,10 @@ one_hot = np.zeros(shape)
 one_hot[rows, train_y] = 1
 train_y = one_hot
 
-p = Pulsar(epochs = 5, learning_rate = 0.0001, initialization = 'Xavier', penalty = 0.00003, loss = 'cross-entropy')
+p = Pulsar(epochs = 1, learning_rate = 0.0001, initialization = 'Xavier', penalty = 0.00003, loss = 'cross-entropy')
 p.convolution(28, 28)
-p.dense(676, 64)
+p.pooling(26, 26)
+p.dense(169, 64)
 p.dense(64, 10)
 p.train(train_X, train_y)
 

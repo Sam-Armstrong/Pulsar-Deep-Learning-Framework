@@ -7,6 +7,7 @@ Description: The main class that is used for implementing neural networks.
 
 from Dense import Dense
 from Convolution import Convolution
+from Pooling import Pooling
 import numpy as np
 
 # Normalizes a set of data
@@ -37,6 +38,10 @@ class Pulsar:
     def convolution(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1):
         self.layers.append(Convolution(input_height, input_width, kernel_size = kernel_size, depth = depth, 
                                        input_depth = input_depth, batch_size = self.batch_size, learning_rate = self.lr))
+
+    def pooling(self, input_height, input_width, mode = 'max', spatial_extent = 2, stride = 2, depth = 1):
+        self.layers.append(Pooling(input_height, input_width, mode = mode, spatial_extent = spatial_extent, 
+                                   stride = stride, batch_size = self.batch_size, depth = depth))
 
     def train(self, training_data, training_labels):
         training_data = NormalizeInput(training_data) # Normalizes the input training data
@@ -86,6 +91,8 @@ class Pulsar:
                     if type(layer) == Dense:
                         gradient, W = layer.backpropagate(x, next_layer_weights = W, next_layer_grad = gradient)
                     elif type(layer) == Convolution:
+                        gradient = layer.backpropagate(x, next_layer_weights = W, next_layer_grad = gradient)
+                    else:
                         gradient = layer.backpropagate(x, next_layer_weights = W, next_layer_grad = gradient)
                     i -= 1
                     

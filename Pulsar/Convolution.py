@@ -2,10 +2,9 @@
 Author: Sam Armstrong
 Date: 2021
 
-Description: Class for creating and interacting with dense (fully connected) network layers.
+Description: Class for creating and interacting with convolutional network layers.
 """
 
-from numpy.lib.function_base import gradient
 from Initialization import Initialization
 from Activation import Activation
 import numpy as np
@@ -76,7 +75,7 @@ class Convolution:
         current_batch_size = len(batch)
 
         if len(next_layer_grad.shape) == 4:
-            next_layer_grad = next_layer_grad.reshape(current_batch_size, next_layer_grad.shape[3] * next_layer_grad.shape[2])
+            next_layer_grad = next_layer_grad.reshape(current_batch_size, next_layer_grad.shape[3] * next_layer_grad.shape[2] * next_layer_grad.shape[1])
 
         # Finds the output gradient if the next layer is dense - as dense layers do not return their input gradient
         try:
