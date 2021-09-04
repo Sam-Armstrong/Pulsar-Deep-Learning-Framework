@@ -60,12 +60,11 @@ class Dense:
         derivative_matrix = a.activateDerivative(h) # Applies the derivative of the activation function
 
         # Calculates the local gradients for each of the neurons in the layer
-        try:
-            delta = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
-        except:
-            # Finds the gradient of the selected loss function
+        if next_layer_weights is None and next_layer_grad is None:
             l = Loss(self.loss)
             delta = l.derivativeLoss(batch_labels, y, derivative_matrix)
+        else:
+            delta = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
 
         # Updates the weights and biases
         self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch)

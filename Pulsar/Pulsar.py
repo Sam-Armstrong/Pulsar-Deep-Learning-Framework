@@ -39,7 +39,6 @@ class Pulsar:
                                        input_depth = input_depth, batch_size = self.batch_size, learning_rate = self.lr))
 
     def train(self, training_data, training_labels):
-        print(self.layers)
         training_data = NormalizeInput(training_data) # Normalizes the input training data
         Ntrain = len(training_data)
         Nlayers = len(self.layers)
