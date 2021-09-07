@@ -20,38 +20,44 @@ class Pooling:
         self.input_height = input_height
         self.input_width = input_width
 
-    def forwardPass(self, batch):
+
+    def forwardPass(self, batch, mode = 'forward'):
         current_batch_size = len(batch)
 
-        batch = batch.reshape(current_batch_size, self.depth, self.input_height, self.input_width)
         x_positions = int((self.input_width - self.spatial_extent + self.stride) / self.stride)
         y_positions = int((self.input_height - self.spatial_extent + self.stride) / self.stride)
 
-        output = np.zeros((current_batch_size, self.depth, y_positions, x_positions))
-        self.max_index = np.empty((current_batch_size, self.depth, y_positions, x_positions, 3))
+        batch = batch.reshape(current_batch_size, self.depth, self.input_height, self.input_width)
+        output = batch[:current_batch_size, :self.depth, :self.input_height, :self.input_width].reshape(current_batch_size, self.depth, y_positions, self.spatial_extent, x_positions, self.spatial_extent).max(axis = (3, 5))
+        #Output appears to be working
 
-        for n in range(current_batch_size):
-            data = batch[n]
-            for d in range(self.depth):
-                for y in range(y_positions):
-                    for x in range(x_positions):
-                        current_data = data[:, y:y+self.spatial_extent, x:x+self.spatial_extent]
-                        max_value = np.amax(current_data)
-                        output[n][d][y][x] = max_value
+        # Only updates the pooling indexes during backpropagation; to speed up forward passes
+        if mode == 'back':
+            self.max_index = np.empty((current_batch_size, self.depth, y_positions, x_positions, 3))
 
-                        indexes = np.where(current_data == max_value)
-                        self.max_index[n][d][y][x][0] = indexes[0][0] + d
-                        self.max_index[n][d][y][x][1] = indexes[1][0] + y
-                        self.max_index[n][d][y][x][2] = indexes[2][0] + x
+            for n in range(current_batch_size):
+                data = batch[n]
+                for d in range(self.depth):
+                    for y in range(y_positions):
+                        for x in range(x_positions):
+                            current_y = y * self.spatial_extent
+                            current_x = x * self.spatial_extent
+                            current_data = data[:, current_y:current_y+self.spatial_extent, current_x:current_x+self.spatial_extent]
+                            max_value = np.amax(current_data)
+
+                            indexes = np.where(current_data == max_value)
+
+                            # Stores the index of each of the max values
+                            self.max_index[n][d][y][x][0] = indexes[0][0]
+                            self.max_index[n][d][y][x][1] = indexes[1][0]
+                            self.max_index[n][d][y][x][2] = indexes[2][0]
 
         return output
 
 
     def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
-        
         current_batch_size = len(batch)
-
-        self.forwardPass(batch)
+        self.forwardPass(batch, mode = 'back')
 
         batch = batch.reshape(self.batch_size, self.depth, self.input_height, self.input_width)
         x_positions = int((self.input_width - self.spatial_extent + self.stride) / self.stride)
@@ -69,18 +75,19 @@ class Pooling:
             pooling_gradient = np.empty((self.batch_size, self.depth, self.input_height, self.input_width))
 
             for n in range(len(batch)):
-                data = batch[n]
                 for d in range(self.depth):
                     for y in range(y_positions):
                         for x in range(x_positions):
                             try:
-                                # Works when the next layer is a Convolution
+                                # When the next layer is a Convolution
                                 grad = next_layer_grad[n][d][y][x]
                             except:
-                                # Works when the next layer is Dense
-                                grad = next_layer_grad[n][(d * y_positions * x_positions) + (y * x_positions) + x]
+                                # When the next layer is Dense
+                                grad = next_layer_grad[n][(d * y_positions * x_positions) + (y * x_positions) + x - 1]
 
-                            pooling_gradient[n][int(self.max_index[n][d][y][x][0])][int(self.max_index[n][d][y][x][1])][int(self.max_index[n][d][y][x][2])] = grad
+                            current_position_x = (x * self.stride) + self.spatial_extent - self.stride
+                            current_position_y = (y * self.stride) + self.spatial_extent - self.stride
+                            pooling_gradient[n][d][int(self.max_index[n][d][y][x][1]) + current_position_y][int(self.max_index[n][d][y][x][2]) + current_position_x] = grad
 
             return pooling_gradient
         
