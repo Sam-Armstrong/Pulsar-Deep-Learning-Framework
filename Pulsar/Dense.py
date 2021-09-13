@@ -60,11 +60,13 @@ class Dense:
         derivative_matrix = a.activateDerivative(h) # Applies the derivative of the activation function
 
         # Calculates the local gradients for each of the neurons in the layer
-        if next_layer_weights is None and next_layer_grad is None:
+        if next_layer_weights is None and next_layer_grad is None and batch_labels is not None: # If this is the output layer
             l = Loss(self.loss)
             delta = l.derivativeLoss(batch_labels, y, derivative_matrix)
-        else:
+        elif batch_labels is not None: # If this is a hidden layer
             delta = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
+        else:
+            delta = next_layer_grad.reshape(self.batch_size, self.Nout)
 
         # Updates the weights and biases
         self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch)
@@ -72,8 +74,8 @@ class Dense:
 
         if self.penalty != 0:
             if self.reg == 'L2':
-                self.weights += -1 * L2_penalty_matrix(self.weights, self.penalty)
+                self.weights -= L2_penalty_matrix(self.weights, self.penalty)
             else:
-                self.weights += -1 * L1_penalty_matrix(self.weights, self.penalty)
+                self.weights -= L1_penalty_matrix(self.weights, self.penalty)
         
         return delta, self.weights

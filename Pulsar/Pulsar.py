@@ -49,6 +49,7 @@ class Pulsar:
         Nlayers = len(self.layers)
 
         for n in range(self.epochs):
+            print('Epoch %s' % (n + 1))
             batch_number = 1
             dW = 0
             db = 0

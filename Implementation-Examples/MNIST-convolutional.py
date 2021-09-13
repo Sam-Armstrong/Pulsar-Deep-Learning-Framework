@@ -16,11 +16,15 @@ one_hot = np.zeros(shape)
 one_hot[rows, train_y] = 1
 train_y = one_hot
 
-p = Pulsar(epochs = 3, learning_rate = 0.00001, initialization = 'Xavier', penalty = 0.000003, loss = 'cross-entropy')
-p.convolution(28, 28)
-p.pooling(26, 26, depth = 1) #Fix pooling depth
-p.dense(169, 64)
-p.dense(64, 10)
+p = Pulsar(epochs = 1, learning_rate = 0.01, initialization = 'Xavier', penalty = 0.003, loss = 'mean-squared')
+p.convolution(28, 28, depth = 3) #Check padding
+p.convolution(26, 26, input_depth = 3)
+#p.pooling(24, 24, depth = 1) #Fix pooling depth
+p.dense(576, 10, activation = 'relu')
+#p.dense(784, 784)
+#p.pooling(28, 28)
+#p.dense(196, 10, activation = 'relu')
+
 p.train(train_X, train_y)
 
 predictions = p.batchPredict(test_X)
