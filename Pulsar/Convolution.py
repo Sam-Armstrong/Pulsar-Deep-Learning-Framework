@@ -5,7 +5,6 @@ Date: 2021
 Description: Class for creating and interacting with convolutional network layers for automatic feature extraction.
 """
 
-from Initialization import Initialization
 from Activation import Activation
 import numpy as np
 from scipy import signal
@@ -20,6 +19,7 @@ class Convolution:
         self.learning_rate = learning_rate
 
         self.activation = activation
+        self.a = Activation(activation = self.activation)
         self.stride = stride
         self.padding = padding
         # kernel_size: size of the matrix inside each kernel (filter size)
@@ -71,8 +71,10 @@ class Convolution:
 
             output_batch[n] = current_output_batch
 
+            self.h = output_batch # Output prior to activation
+
             # Applies the activation function
-            output_batch = Activation(activation = self.activation).activate(output_batch)
+            #output_batch = self.a.activate(output_batch)
             #print(output_batch.shape)
         
         return output_batch
@@ -154,7 +156,10 @@ class Convolution:
             filter_gradient += current_filter_batch # (3, 1, 3, 3)
             input_gradient[n] = input_batch_grad # / depth?
 
-        self.kernels -= (self.learning_rate * filter_gradient) / current_batch_size
+        #dK = filter_gradient * self.a.activateDerivative(self.h) ###del
+        dK = filter_gradient #* signal.convolve(self.h, batch, mode = 'valid')
+        #print(filter_gradient)
+        self.kernels -= (self.learning_rate * dK) / current_batch_size
         self.biases -= (self.learning_rate * np.sum(output_gradient, axis = 0)) / current_batch_size
         
         return input_gradient

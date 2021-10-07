@@ -19,6 +19,7 @@ class Pooling:
         self.depth = depth
         self.input_height = input_height
         self.input_width = input_width
+        self.a = Activation()
 
 
     def forwardPass(self, batch, mode = 'forward'):
@@ -51,7 +52,7 @@ class Pooling:
                             self.max_index[n][d][y][x][0] = indexes[0][0]
                             self.max_index[n][d][y][x][1] = indexes[1][0]
                             self.max_index[n][d][y][x][2] = indexes[2][0]
-
+        
         return output
 
 
@@ -66,10 +67,11 @@ class Pooling:
         if next_layer_grad is not None:
             # Finds the output gradient if the next layer is dense - as dense layers do not return their input gradient
             try:
-                fp = self.forwardPass(batch).reshape(current_batch_size, int((self.input_width - self.spatial_extent + self.stride) / self.stride) * int((self.input_height - self.spatial_extent + self.stride) / self.stride))
-                derivative_matrix = Activation().derivativeReLU(fp)
+                fp = self.forwardPass(batch).reshape(current_batch_size, self.depth * int((self.input_width - self.spatial_extent + self.stride) / self.stride) * int((self.input_height - self.spatial_extent + self.stride) / self.stride))
+                derivative_matrix = self.a.derivativeReLU(fp)
                 next_layer_grad = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
             except Exception as e:
+                print(e)
                 pass
 
             pooling_gradient = np.empty((self.batch_size, self.depth, self.input_height, self.input_width))
