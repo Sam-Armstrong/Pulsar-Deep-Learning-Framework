@@ -33,11 +33,12 @@ class Pulsar:
     def dense(self, Nin, Nout, activation = 'relu'):
         self.layers.append(Dense(Nin, Nout, learning_rate = self.lr, initialization = self.initialization, 
                                  activation = activation, penalty = self.penalty, regularization = self.regularization,
-                                 loss = self.loss_function))
+                                 loss = self.loss_function, batch_size = self.batch_size))
 
-    def convolution(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1):
+    def convolution(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1, padding = 0, stride = 1):
         self.layers.append(Convolution(input_height, input_width, kernel_size = kernel_size, depth = depth, 
-                                       input_depth = input_depth, batch_size = self.batch_size, learning_rate = self.lr))
+                                       input_depth = input_depth, batch_size = self.batch_size, learning_rate = self.lr, 
+                                       padding = padding, stride = stride))
 
     def pooling(self, input_height, input_width, mode = 'max', spatial_extent = 2, stride = 2, depth = 1):
         self.layers.append(Pooling(input_height, input_width, mode = mode, spatial_extent = spatial_extent, 
@@ -51,16 +52,15 @@ class Pulsar:
         for n in range(self.epochs):
             print('Epoch %s' % (n + 1))
             batch_number = 1
-            dW = 0
-            db = 0
 
-            if self.adaptive_lr == True:
-                lr = self.lr * np.exp(-0.01 * n)
-            else:
-                lr = self.lr
+            # Removed this iteration of adaptive learning rate
+            # if self.adaptive_lr == True:
+            #     lr = self.lr * np.exp(-0.01 * n)
+            # else:
+            #     lr = self.lr
 
-            for l in self.layers:
-                l.lr = lr
+            # for l in self.layers:
+            #     l.lr = lr
 
             shuffled_idxs = np.random.permutation(Ntrain)
 

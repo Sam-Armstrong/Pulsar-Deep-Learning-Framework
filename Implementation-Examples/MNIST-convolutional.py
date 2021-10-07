@@ -16,16 +16,13 @@ one_hot = np.zeros(shape)
 one_hot[rows, train_y] = 1
 train_y = one_hot
 
-p = Pulsar(epochs = 1, learning_rate = 0.01, initialization = 'Xavier', penalty = 0.003, loss = 'mean-squared')
-p.convolution(28, 28, depth = 3) #Check padding
-p.convolution(26, 26, input_depth = 3)
-#p.pooling(24, 24, depth = 1) #Fix pooling depth
-p.dense(576, 10, activation = 'relu')
-#p.dense(784, 784)
-#p.pooling(28, 28)
-#p.dense(196, 10, activation = 'relu')
+p = Pulsar(epochs = 3, learning_rate = 0.0001, initialization = 'Xavier', penalty = 0.00003, loss = 'mean-squared', batch_size = 200)
+p.convolution(28, 28, depth = 1, padding = 1, stride = 1, kernel_size = 3)
+p.dense(784, 10, activation = 'relu')
 
 p.train(train_X, train_y)
+
+print("Training finished in %s seconds" % round((time.time() - start_time), 1))
 
 predictions = p.batchPredict(test_X)
 predictions = np.argmax(predictions, axis = 1)
