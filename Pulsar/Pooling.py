@@ -30,7 +30,6 @@ class Pooling:
 
         batch = batch.reshape(current_batch_size, self.depth, self.input_height, self.input_width)
         output = batch[:current_batch_size, :self.depth, :self.input_height, :self.input_width].reshape(current_batch_size, self.depth, y_positions, self.spatial_extent, x_positions, self.spatial_extent).max(axis = (3, 5))
-        #Output appears to be working
 
         # Only updates the pooling indexes during backpropagation; to speed up forward passes
         if mode == 'back':

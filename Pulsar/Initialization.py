@@ -15,7 +15,7 @@ class Initialization:
     # Defines a random weight initialization
     def Random_init(self, Nin, Nout):
         W = np.random.uniform(0, 1, (Nout, Nin))
-        return W / Nout #np.sum(W)
+        return W / Nout
 
     # Defines a Xavier weight initialization
     def Xavier_init(self, Nin, Nout):
@@ -25,4 +25,4 @@ class Initialization:
     # Defines a He initialization
     def He_init(self, Nin, Nout):
         W = np.random.randn(Nout, Nin) * np.sqrt(2 / (Nin + Nout))
-        return W
+        return W / np.sum(W)

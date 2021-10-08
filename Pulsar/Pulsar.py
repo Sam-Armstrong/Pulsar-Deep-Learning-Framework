@@ -53,15 +53,6 @@ class Pulsar:
             print('Epoch %s' % (n + 1))
             batch_number = 1
 
-            # Removed this iteration of adaptive learning rate
-            # if self.adaptive_lr == True:
-            #     lr = self.lr * np.exp(-0.01 * n)
-            # else:
-            #     lr = self.lr
-
-            # for l in self.layers:
-            #     l.lr = lr
-
             shuffled_idxs = np.random.permutation(Ntrain)
 
             # Loops through all the batches in the training set

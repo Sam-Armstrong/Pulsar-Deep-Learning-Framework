@@ -6,7 +6,6 @@ Description: Class that contains different loss functions and their derivatives.
 """
 
 import numpy as np
-from Activation import Activation
 
 class Loss:
 
