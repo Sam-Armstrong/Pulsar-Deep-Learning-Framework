@@ -12,6 +12,7 @@ class Pooling:
     
     def __init__(self, input_height, input_width, mode = 'max', spatial_extent = 2, stride = 2, 
                  batch_size = 200, depth = 1):
+        # Defines the attributes of this pooling object
         self.mode = mode
         self.spatial_extent = spatial_extent
         self.stride = stride
@@ -22,12 +23,15 @@ class Pooling:
         self.a = Activation()
 
 
+    # Defines a forward pass through a pooling layer to reduce the size of a given feature map
     def forwardPass(self, batch, mode = 'forward'):
         current_batch_size = len(batch)
 
+        # Finds the size of the layer output
         x_positions = int((self.input_width - self.spatial_extent + self.stride) / self.stride)
         y_positions = int((self.input_height - self.spatial_extent + self.stride) / self.stride)
 
+        # Ensures the incoming data is in the correct shape
         batch = batch.reshape(current_batch_size, self.depth, self.input_height, self.input_width)
         output = batch[:current_batch_size, :self.depth, :self.input_height, :self.input_width].reshape(current_batch_size, self.depth, y_positions, self.spatial_extent, x_positions, self.spatial_extent).max(axis = (3, 5))
 
@@ -35,6 +39,7 @@ class Pooling:
         if mode == 'back':
             self.max_index = np.empty((current_batch_size, self.depth, y_positions, x_positions, 3))
 
+            # Loops through every datapoint in order to log the positions of max values that become the output
             for n in range(current_batch_size):
                 data = batch[n]
                 for d in range(self.depth):
@@ -55,11 +60,15 @@ class Pooling:
         return output
 
 
+    # Backpropagates the error through the pooling layer
     def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
         current_batch_size = len(batch)
         self.forwardPass(batch, mode = 'back')
 
+        # Unflattens the batch
         batch = batch.reshape(self.batch_size, self.depth, self.input_height, self.input_width)
+
+        # Finds the size of the output of this layer
         x_positions = int((self.input_width - self.spatial_extent + self.stride) / self.stride)
         y_positions = int((self.input_height - self.spatial_extent + self.stride) / self.stride)
 
@@ -75,6 +84,8 @@ class Pooling:
 
             pooling_gradient = np.empty((self.batch_size, self.depth, self.input_height, self.input_width))
 
+            # Loops through every datapoint in the batch to find the location of the 'max' values that were used in the forward pass
+            # The gradient is then pass backward in these positions to train precceding layers
             for n in range(len(batch)):
                 for d in range(self.depth):
                     for y in range(y_positions):
@@ -86,11 +97,15 @@ class Pooling:
                                 # When the next layer is Dense
                                 grad = next_layer_grad[n][(d * y_positions * x_positions) + (y * x_positions) + x - 1]
 
+                            # Finds the current position on the output feature map (the reduced feature map)
                             current_position_x = (x * self.stride) + self.spatial_extent - self.stride
                             current_position_y = (y * self.stride) + self.spatial_extent - self.stride
+
+                            # Assigns the gradient to the correct position in the original feature map
                             pooling_gradient[n][d][int(self.max_index[n][d][y][x][1]) + current_position_y][int(self.max_index[n][d][y][x][2]) + current_position_x] = grad
 
             return pooling_gradient
         
         else:
+            # If no output gradients are passed
             print('Error: Gradients not received by pooling layer')

@@ -33,6 +33,7 @@ class Dense:
         self.penalty = penalty
         self.loss = loss
         self.batch_size = batch_size
+        self.a = Activation(self.activation)
 
         if initialization == 'He':
             self.weights = Initialization().He_init(Nin, Nout)
@@ -43,21 +44,19 @@ class Dense:
 
     # Calculates the layer output for a given batch
     def forwardPass(self, batch):
-        a = Activation(self.activation)
         batch = batch.reshape(len(batch), self.Nin)
         h = np.transpose(np.matmul(self.weights, np.transpose(batch)))
         h = np.add(h, self.biases[np.newaxis,:]) # Adds the biases
-        y = a.activate(h) # Applies the activation function
+        y = self.a.activate(h) # Applies the activation function
         return y
 
     # Trains the layer for a batch through backpropagation
     def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
         batch = batch.reshape(self.batch_size, self.Nin)
-        a = Activation(self.activation)
         h = np.transpose(np.matmul(self.weights, np.transpose(batch)))
         h = np.add(h, self.biases[np.newaxis,:]) # Adds the biases
-        y = a.activate(h) # Applies the activation function
-        derivative_matrix = a.activateDerivative(h) # Applies the derivative of the activation function
+        y = self.a.activate(h) # Applies the activation function
+        derivative_matrix = self.a.activateDerivative(h) # Applies the derivative of the activation function
 
         # Calculates the local gradients for each of the neurons in the layer
         if next_layer_weights is None and next_layer_grad is None and batch_labels is not None: # If this is the output layer
@@ -72,6 +71,7 @@ class Dense:
         self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch)
         self.biases += (sum(delta) * self.lr) / len(batch)
 
+        # Applies the chosen regularization method
         if self.penalty != 0:
             if self.reg == 'L2':
                 self.weights -= L2_penalty_matrix(self.weights, self.penalty)

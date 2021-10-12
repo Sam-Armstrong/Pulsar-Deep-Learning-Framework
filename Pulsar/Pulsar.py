@@ -30,20 +30,24 @@ class Pulsar:
         self.adaptive_lr = adaptive_lr
         self.layers = list()
 
+    # Adds a fully-connected layer to the network
     def dense(self, Nin, Nout, activation = 'relu'):
         self.layers.append(Dense(Nin, Nout, learning_rate = self.lr, initialization = self.initialization, 
                                  activation = activation, penalty = self.penalty, regularization = self.regularization,
                                  loss = self.loss_function, batch_size = self.batch_size))
 
+    # Adds a convolutional layer to the network
     def convolution(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1, padding = 0, stride = 1):
         self.layers.append(Convolution(input_height, input_width, kernel_size = kernel_size, depth = depth, 
                                        input_depth = input_depth, batch_size = self.batch_size, learning_rate = self.lr, 
                                        padding = padding, stride = stride))
 
+    # Adds a pooling layer to the network
     def pooling(self, input_height, input_width, mode = 'max', spatial_extent = 2, stride = 2, depth = 1):
         self.layers.append(Pooling(input_height, input_width, mode = mode, spatial_extent = spatial_extent, 
                                    stride = stride, batch_size = self.batch_size, depth = depth))
 
+    # Trains the defined network
     def train(self, training_data, training_labels):
         training_data = NormalizeInput(training_data) # Normalizes the input training data
         Ntrain = len(training_data)

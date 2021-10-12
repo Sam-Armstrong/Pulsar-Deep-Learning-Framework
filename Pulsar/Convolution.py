@@ -13,11 +13,10 @@ class Convolution:
     
     def __init__(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1, batch_size = 200,
                  stride = 1, padding = 0, activation = 'relu', learning_rate = 0.001) -> None:
-        
+        # Attributes of this convolution object
         self.kernel_size = kernel_size
         self.batch_size = batch_size
         self.learning_rate = learning_rate
-
         self.a = Activation(activation = activation)
         self.stride = stride
         self.padding = padding
@@ -35,10 +34,12 @@ class Convolution:
 
     def forwardPass(self, batch):
         current_batch_size = len(batch)
+
+        # Reshapes the data
         batch = batch.reshape(current_batch_size, self.input_depth, self.input_height, self.input_width)
         output_batch = np.empty((current_batch_size, self.depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)))
 
-        # Loop through the number of output kernels
+        # Loop through the number of output kernels to form an output feature map with the correct depth (number of output channels)
         for n in range(current_batch_size):
             current_output_batch = np.empty((self.depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)))
             data = batch[n]
@@ -47,23 +48,23 @@ class Convolution:
             if self.padding != 0:
                 data = np.pad(data, self.padding)
                 for i in range(self.padding):
+                    # Removes unnecessary third-dimension padding
                     data = np.delete(data, 0, axis = 0)
                     data = np.delete(data, len(data) - 1, axis = 0)
 
+            # Convolves the input feature map with each filter
             for i in range(self.depth):
                 output = np.copy(self.biases[i]) # The ouput is the bias + the convolution output
 
                 filter = self.kernels[i]
-                output += signal.correlate(data, filter, mode = 'valid')[0]
+                output += signal.correlate(data, filter, mode = 'valid')[0] # Performs cross-correlation (equivalent to convolution)
 
                 current_output_batch[i] = output
 
             output_batch[n] = current_output_batch
 
-            self.h = output_batch # Output prior to activation
-
-            # Applies the activation function
-            output_batch = self.a.activate(output_batch)
+        self.h = output_batch # Output prior to activation
+        output_batch = self.a.activate(output_batch) # Applies the activation function
         
         return output_batch
 
