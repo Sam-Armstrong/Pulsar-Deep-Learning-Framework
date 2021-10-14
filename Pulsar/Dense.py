@@ -62,7 +62,7 @@ class Dense:
         if next_layer_weights is None and next_layer_grad is None and batch_labels is not None: # If this is the output layer
             l = Loss(self.loss)
             delta = l.derivativeLoss(batch_labels, y, derivative_matrix)
-        elif batch_labels is not None: # If this is a hidden layer
+        elif batch_labels is None: # If this is a hidden layer
             delta = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
         else:
             delta = next_layer_grad.reshape(self.batch_size, self.Nout)

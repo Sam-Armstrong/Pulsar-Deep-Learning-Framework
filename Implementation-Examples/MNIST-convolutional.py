@@ -16,6 +16,7 @@ one_hot = np.zeros(shape)
 one_hot[rows, train_y] = 1
 train_y = one_hot
 
+
 p = Pulsar(epochs = 1, learning_rate = 0.01, initialization = 'Xavier', penalty = 0.003, loss = 'mean-squared', batch_size = 200)
 p.convolution(28, 28, depth = 3, padding = 0, stride = 1, kernel_size = 3)
 p.dense(2028, 10, activation = 'relu')
@@ -26,6 +27,8 @@ print("Training finished in %s seconds" % round((time.time() - start_time), 1))
 
 predictions = p.batchPredict(test_X)
 predictions = np.argmax(predictions, axis = 1)
+
+
 
 correct = 0
 total_samples = len(predictions)
