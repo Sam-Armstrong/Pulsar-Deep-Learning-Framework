@@ -33,7 +33,10 @@ class Convolution:
 
 
     def forwardPass(self, batch):
-        current_batch_size = len(batch)
+        if np.shape(batch) == 4:
+            current_batch_size = len(batch)
+        else:
+            current_batch_size = self.batch_size
 
         # Reshapes the data
         batch = batch.reshape(current_batch_size, self.input_depth, self.input_height, self.input_width)

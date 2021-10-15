@@ -25,7 +25,10 @@ class Pooling:
 
     # Defines a forward pass through a pooling layer to reduce the size of a given feature map
     def forwardPass(self, batch, mode = 'forward'):
-        current_batch_size = len(batch)
+        if np.shape(batch) == 4:
+            current_batch_size = len(batch)
+        else:
+            current_batch_size = self.batch_size
 
         # Finds the size of the layer output
         x_positions = int((self.input_width - self.spatial_extent + self.stride) / self.stride)

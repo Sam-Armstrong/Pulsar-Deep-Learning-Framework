@@ -13,19 +13,14 @@ class TestConvolutionLayers(unittest.TestCase):
     def testForwardPass1(self):
         c = Convolution(28, 28, batch_size = 200)
         y = c.forwardPass(train_X[0:200])
-        self.assertTrue(np.shape(y) == (200, 26, 26))
+        print(np.shape(y))
+        self.assertTrue(np.shape(y) == (200, 1, 26, 26))
 
     # Testing for a batch size of 1
     def testForwardPass2(self):
-        c = Convolution(28, 28, batch_size = 1)
+        c = Convolution(28, 28, batch_size = 1, depth = 1)
         y = c.forwardPass(train_X[0])
-        self.assertTrue(np.shape(y) == (1, 26, 26))
-
-    """def testForwardPass3(self):
-        c = Convolution(28, 28, batch_size = 1, depth = 2)
-        y = c.forwardPass(train_X[0])
-        print(np.shape(y))
-        self.assertTrue(np.shape(y) == (1, 26, 26))"""
+        self.assertTrue(np.shape(y) == (1, 1, 26, 26))
 
 
 if __name__ == '__main__':

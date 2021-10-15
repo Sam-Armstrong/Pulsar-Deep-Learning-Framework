@@ -1,9 +1,10 @@
-from keras.datasets import mnist # Import the MNIST dataset
 from context import Pulsar
 import time
 import numpy as np
 
 start_time = time.time()
+
+from keras.datasets import mnist # Import the MNIST dataset
 
 (train_X, train_y), (test_X, test_y) = mnist.load_data()
 train_X = train_X.reshape(60000, 784)

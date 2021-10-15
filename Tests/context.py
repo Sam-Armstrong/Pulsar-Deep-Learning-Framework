@@ -7,4 +7,5 @@ from Activation import Activation
 from Dense import Dense
 from Convolution import Convolution
 from Initialization import Initialization
+from Pooling import Pooling
 from Pulsar import Pulsar
