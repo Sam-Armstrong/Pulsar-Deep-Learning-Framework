@@ -12,12 +12,13 @@ from scipy import signal
 class Convolution:
     
     def __init__(self, input_height, input_width, kernel_size = 3, depth = 1, input_depth = 1, batch_size = 200,
-                 stride = 1, padding = 0, activation = 'relu', learning_rate = 0.001) -> None:
+                 stride = 1, padding = 0, activation = 'relu', learning_rate = 0.001, optimizer = 'sgd') -> None:
         # Attributes of this convolution object
         self.kernel_size = kernel_size
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.a = Activation(activation = activation)
+        self.optimizer = optimizer
         self.stride = stride
         self.padding = padding
         self.depth = depth # The number of kernels (depth of the output)
@@ -27,16 +28,22 @@ class Convolution:
         self.output_shape = (batch_size, depth, ((input_height + (padding * 2)) - kernel_size + stride) / stride, ((input_width + (padding * 2)) - kernel_size + stride) / stride) # The shape of the output from the layer
         self.kernels_shape = (depth, input_depth, kernel_size, kernel_size) # The shape of the kernels (filters)
         
+        self.m = 0
+        self.s = 0
+        self.m_bias = 0
+        self.s_bias = 0
+
         # Initialize the filters and biases
         self.kernels = np.random.randn(*self.kernels_shape) * (1 / (kernel_size * kernel_size * input_depth))
         self.biases = np.zeros((depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)))
 
 
     def forwardPass(self, batch):
-        if np.shape(batch) == 4:
+        """if len(np.shape(batch)) == 4:
             current_batch_size = len(batch)
         else:
-            current_batch_size = self.batch_size
+            current_batch_size = self.batch_size"""
+        current_batch_size = len(batch)
 
         # Reshapes the data
         batch = batch.reshape(current_batch_size, self.input_depth, self.input_height, self.input_width)
@@ -134,7 +141,31 @@ class Convolution:
             filter_gradient += current_filter_batch
             input_gradient[n] = input_batch_grad # / depth?
 
-        self.kernels -= (self.learning_rate * filter_gradient) / current_batch_size
-        self.biases -= (self.learning_rate * np.sum(output_gradient, axis = 0)) / current_batch_size
+        if self.optimizer == 'sgd':
+            self.kernels -= (self.learning_rate * filter_gradient) / current_batch_size
+            self.biases -= (self.learning_rate * np.sum(output_gradient, axis = 0)) / current_batch_size
+        
+        elif self.optimizer == 'adam':
+            # Adam parameters are currently just set to default values
+            beta1 = 0.9
+            beta2 = 0.99999
+            epsilon = 0.0001
+
+            m = (beta1 * self.m) - ((1 - beta1) * filter_gradient)
+            s = (beta2 * self.s) + ((1 - beta2) * (filter_gradient ** 2))
+            m_hat = m / (1 - beta1)
+            s_hat = s / (1 - beta2)
+            self.m = m
+            self.s = s
+
+            m_bias = (beta1 * self.m_bias) - ((1 - beta1) * np.sum(output_gradient, axis = 0))
+            s_bias = (beta2 * self.s_bias) + ((1 - beta2) * (np.sum(output_gradient, axis = 0) ** 2))
+            m_bias_hat = m_bias / (1 - beta1)
+            s_bias_hat = s_bias / (1 - beta2)
+            self.m_bias = m_bias
+            self.s_bias = s_bias
+
+            self.kernels -= self.learning_rate * (m_hat / np.sqrt(s_hat + epsilon))
+            self.biases -= self.learning_rate * (m_bias_hat / np.sqrt(s_bias_hat + epsilon))
         
         return input_gradient

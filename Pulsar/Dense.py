@@ -23,7 +23,7 @@ def L2_penalty_matrix(W, penalty):
 class Dense:
     
     def __init__(self, Nin, Nout, initialization = 'He', activation = 'relu', learning_rate = 0.01, 
-                 regularization = 'L2', penalty = 0, loss = 'cross-entropy', batch_size = 200) -> None:
+                 regularization = 'L2', penalty = 0, loss = 'cross-entropy', batch_size = 200, optimizer = 'SGD') -> None:
         self.Nin = Nin
         self.Nout = Nout
         self.biases = np.zeros((Nout))
@@ -34,6 +34,12 @@ class Dense:
         self.loss = loss
         self.batch_size = batch_size
         self.a = Activation(self.activation)
+        self.optimizer = optimizer
+
+        self.m = 0
+        self.s = 0
+        self.m_bias = 0
+        self.s_bias = 0
 
         if initialization == 'He':
             self.weights = Initialization().He_init(Nin, Nout)
@@ -68,14 +74,43 @@ class Dense:
             delta = next_layer_grad.reshape(self.batch_size, self.Nout)
 
         # Updates the weights and biases
-        self.weights += (np.matmul(delta.T, batch) * self.lr) / len(batch)
-        self.biases += (sum(delta) * self.lr) / len(batch)
+        if self.optimizer == 'sgd':
+            delta_batch = np.matmul(delta.T, batch)
+            self.weights += (delta_batch * self.lr) / len(batch)
+            self.biases += (sum(delta) * self.lr) / len(batch)
+        
+        elif self.optimizer == 'adam':
+            # Adam parameters are currently just set to default values
+            beta1 = 0.9
+            beta2 = 0.99999
+            epsilon = 0.0001
+
+            delta_batch = np.matmul(delta.T, batch) # Derivative of the Error function with respect to the weights
+            m = (beta1 * self.m) - ((1 - beta1) * delta_batch)
+            s = (beta2 * self.s) + ((1 - beta2) * (delta_batch ** 2))
+            m_hat = m / (1 - beta1)
+            s_hat = s / (1 - beta2)
+            self.m = m
+            self.s = s
+
+            m_bias = (beta1 * self.m_bias) - ((1 - beta1) * sum(delta))
+            s_bias = (beta2 * self.s_bias) + ((1 - beta2) * (sum(delta) ** 2))
+            m_bias_hat = m_bias / (1 - beta1)
+            s_bias_hat = s_bias / (1 - beta2)
+            self.m_bias = m_bias
+            self.s_bias = s_bias
+
+            self.weights -= self.lr * (m_hat / np.sqrt(s_hat + epsilon))
+            self.biases -= self.lr * m_bias_hat / np.sqrt(s_bias_hat + epsilon)
+
 
         # Applies the chosen regularization method
         if self.penalty != 0:
             if self.reg == 'L2':
                 self.weights -= L2_penalty_matrix(self.weights, self.penalty)
+                self.biases -= L2_penalty_matrix(self.biases, self.penalty)
             else:
                 self.weights -= L1_penalty_matrix(self.weights, self.penalty)
+                self.biases -= L1_penalty_matrix(self.biases, self.penalty)
         
         return delta, self.weights
