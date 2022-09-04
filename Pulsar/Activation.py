@@ -20,6 +20,8 @@ class Activation:
             return self.ReLU(x)
         elif self.activation_function == 'sigmoid':
             return self.logisticSigmoid(x)
+        else:
+            return x
 
     # Applies the derivative of a selected activation function to the given matrix
     def activateDerivative(self, x):
@@ -29,6 +31,8 @@ class Activation:
             return self.derivativeSigmoid(x)
         elif self.activation_function == 'softmax':
             return self.derivativeSoftmax(x)
+        else:
+            return np.ones(x.shape)
 
     # Softmax activation function (takes a vector rather than a matrix - only applied on the final layer of a network)
     def softmax(self, x):
