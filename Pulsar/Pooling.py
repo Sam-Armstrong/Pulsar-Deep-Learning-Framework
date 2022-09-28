@@ -24,7 +24,7 @@ class Pooling:
 
 
     # Defines a forward pass through a pooling layer to reduce the size of a given feature map
-    def forwardPass(self, batch, mode = 'forward'):
+    def forward(self, batch, mode ='forward'):
         if np.shape(batch) == 4:
             current_batch_size = len(batch)
         else:
@@ -64,9 +64,9 @@ class Pooling:
 
 
     # Backpropagates the error through the pooling layer
-    def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
+    def backward(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
         current_batch_size = len(batch)
-        self.forwardPass(batch, mode = 'back')
+        self.forward(batch, mode = 'back')
 
         # Unflattens the batch
         batch = batch.reshape(self.batch_size, self.depth, self.input_height, self.input_width)
@@ -78,7 +78,7 @@ class Pooling:
         if next_layer_grad is not None:
             # Finds the output gradient if the next layer is dense - as dense layers do not return their input gradient
             try:
-                fp = self.forwardPass(batch).reshape(current_batch_size, self.depth * int((self.input_width - self.spatial_extent + self.stride) / self.stride) * int((self.input_height - self.spatial_extent + self.stride) / self.stride))
+                fp = self.forward(batch).reshape(current_batch_size, self.depth * int((self.input_width - self.spatial_extent + self.stride) / self.stride) * int((self.input_height - self.spatial_extent + self.stride) / self.stride))
                 derivative_matrix = self.a.derivativeReLU(fp)
                 next_layer_grad = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
             except Exception as e:

@@ -12,14 +12,14 @@ class TestConvolutionLayers(unittest.TestCase):
     # Also tests that the same number of samples are output as the batch size
     def testForwardPass1(self):
         c = Convolution(28, 28, batch_size = 200)
-        y = c.forwardPass(train_X[0:200])
+        y = c.forward(train_X[0:200])
         print(np.shape(y))
         self.assertTrue(np.shape(y) == (200, 1, 26, 26))
 
     # Testing for a batch size of 1
     def testForwardPass2(self):
         c = Convolution(28, 28, batch_size = 1, depth = 1)
-        y = c.forwardPass(train_X[0])
+        y = c.forward(train_X[0])
         self.assertTrue(np.shape(y) == (1, 1, 26, 26))
 
 

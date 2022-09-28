@@ -77,7 +77,7 @@ class Pulsar:
                 layer = self.layers[Nlayers - 1]
                 x = self.getLayersOutput(batch, self.layers[0:Nlayers - 1])
                 #if type(layer) == Dense:
-                gradient, W = layer.backpropagate(x, batch_labels = batch_labels)
+                gradient, W = layer.backward(x, batch_labels = batch_labels)
                 
                 i = Nlayers - 2
                 # Updates the hidden layers
@@ -85,11 +85,11 @@ class Pulsar:
                     layer = self.layers[i]
                     x = self.getLayersOutput(batch, self.layers[0:i])
                     if type(layer) == Dense:
-                        gradient, W = layer.backpropagate(x, next_layer_weights = W, next_layer_grad = gradient)
+                        gradient, W = layer.backward(x, next_layer_weights = W, next_layer_grad = gradient)
                     elif type(layer) == Convolution:
-                        gradient = layer.backpropagate(x, next_layer_weights = W, next_layer_grad = gradient)
+                        gradient = layer.backward(x, next_layer_weights = W, next_layer_grad = gradient)
                     else:
-                        gradient = layer.backpropagate(x, next_layer_weights = W, next_layer_grad = gradient)
+                        gradient = layer.backward(x, next_layer_weights = W, next_layer_grad = gradient)
                     i -= 1
                     
                 batch_number += 1
@@ -98,12 +98,12 @@ class Pulsar:
     def getLayersOutput(self, batch, layers):
         x = batch
         for l in layers:
-            x = l.forwardPass(x)
+            x = l.forward(x)
         return x
 
     # Allows predictions to be made on a whole batch at a time, speeding up processing
     def batchPredict(self, batch):
         x = batch
         for l in self.layers:
-            x = l.forwardPass(x)
+            x = l.forward(x)
         return x

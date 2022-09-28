@@ -38,7 +38,7 @@ class Convolution:
         self.biases = np.zeros((depth, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride), int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride)))
 
 
-    def forwardPass(self, batch):
+    def forward(self, batch):
         """if len(np.shape(batch)) == 4:
             current_batch_size = len(batch)
         else:
@@ -79,7 +79,7 @@ class Convolution:
         return output_batch
 
 
-    def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
+    def backward(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
 
         current_batch_size = len(batch)
 
@@ -88,7 +88,7 @@ class Convolution:
 
         # Finds the output gradient if the next layer is dense - as dense layers do not return their input gradient
         try:
-            fp = self.forwardPass(batch).reshape(current_batch_size, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride) * int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride) * self.depth)
+            fp = self.forward(batch).reshape(current_batch_size, int(((self.input_height + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride) * int(((self.input_width + (self.padding * 2)) - self.kernel_size + self.stride) / self.stride) * self.depth)
             derivative_matrix = Activation().derivativeReLU(fp)
             output_gradient = np.multiply(np.transpose(np.matmul(np.transpose(next_layer_weights), np.transpose(next_layer_grad))), derivative_matrix)
         except Exception as e:

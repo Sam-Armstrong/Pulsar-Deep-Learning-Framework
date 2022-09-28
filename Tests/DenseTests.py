@@ -7,7 +7,7 @@ class TestDenseLayers(unittest.TestCase):
     def testForwardPass(self):
         x = np.array([[-10, 20, 30], [3, 4, 2]], np.int32)
         dense = Dense(3, 2, initialization = 'random')
-        y = dense.forwardPass(x)
+        y = dense.forward(x)
         self.assertTrue(y.shape == (2, 2)) # Checks the output shape
         self.assertTrue(np.all(y) >= 0) # Checks that the ReLU activation function has been applied correctly
 

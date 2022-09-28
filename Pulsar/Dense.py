@@ -49,7 +49,7 @@ class Dense:
             self.weights = Initialization().Random_init(Nin, Nout)
 
     # Calculates the layer output for a given batch
-    def forwardPass(self, batch):
+    def forward(self, batch):
         batch = batch.reshape(len(batch), self.Nin)
         h = np.transpose(np.matmul(self.weights, np.transpose(batch)))
         h = np.add(h, self.biases[np.newaxis,:]) # Adds the biases
@@ -57,7 +57,7 @@ class Dense:
         return y
 
     # Trains the layer for a batch through backpropagation
-    def backpropagate(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
+    def backward(self, batch, batch_labels = None, next_layer_weights = None, next_layer_grad = None):
         batch = batch.reshape(self.batch_size, self.Nin)
         h = np.transpose(np.matmul(self.weights, np.transpose(batch)))
         h = np.add(h, self.biases[np.newaxis,:]) # Adds the biases

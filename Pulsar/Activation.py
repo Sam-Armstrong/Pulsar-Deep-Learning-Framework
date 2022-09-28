@@ -20,7 +20,7 @@ class Activation:
             return self.ReLU(x)
         elif self.activation_function == 'sigmoid':
             return self.logisticSigmoid(x)
-        else:
+        else: # Linear activation
             return x
 
     # Applies the derivative of a selected activation function to the given matrix
@@ -42,7 +42,7 @@ class Activation:
 
     def derivativeSoftmax(self, x):
         sm = self.softmax(x)
-        return sm * (1- sm)
+        return sm * (1 - sm)
 
     # Applies the ReLU function to a given matrix
     def ReLU(self, h):
@@ -67,3 +67,10 @@ class Activation:
         ls = self.logisticSigmoid(h)
         y = ls * (1 - ls)
         return y
+    
+    def swish(self, h):
+        y = h * (1 / (1 + np.exp(-1 * h)))
+        return y
+    
+    def derivativeSwish(self, h):
+        return h
